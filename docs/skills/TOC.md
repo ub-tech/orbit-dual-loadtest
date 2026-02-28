@@ -1,40 +1,26 @@
-# Skills — Table of Contents
+# Scripts — Table of Contents
 
-## Skill Index
+## Script Index
 
-| Skill | Domain | User-Invocable | Location |
-|---|---|---|---|
-| front-end | React/Next.js messaging UI | Yes | [.claude/skills/front-end/SKILL.md](../../.claude/skills/front-end/SKILL.md) |
-| security | Stylus/Rust + bridge security | Yes | [.claude/skills/security/SKILL.md](../../.claude/skills/security/SKILL.md) |
-| api | Node config & RPC management | Yes | [.claude/skills/api/SKILL.md](../../.claude/skills/api/SKILL.md) |
-| data-integrity | Cross-chain state consistency | Yes | [.claude/skills/data-integrity/SKILL.md](../../.claude/skills/data-integrity/SKILL.md) |
-| application-privacy | Key management & privacy | Yes | [.claude/skills/application-privacy/SKILL.md](../../.claude/skills/application-privacy/SKILL.md) |
-| kickoff | Full SDLC pipeline execution | Yes | [.claude/skills/kickoff/SKILL.md](../../.claude/skills/kickoff/SKILL.md) |
-| status | Pipeline status display | Yes | [.claude/skills/status/SKILL.md](../../.claude/skills/status/SKILL.md) |
-| agent-teams | Testing orchestration | No | [.claude/skills/agent-teams/SKILL.md](../../.claude/skills/agent-teams/SKILL.md) |
+| Script | Purpose | Usage |
+|--------|---------|-------|
+| `kickoff.sh` | Full pipeline runner (interactive) | `./scripts/kickoff.sh` |
+| `deploy-chain.ts` | Deploy L2 chain via Orbit SDK | `npx ts-node scripts/deploy-chain.ts` |
+| `start-node.sh` | Launch Nitro node in Docker | `./scripts/start-node.sh` |
+| `verify-chain.ts` | Post-deploy health check | `npx ts-node scripts/verify-chain.ts` |
+| `deploy-contract.sh` | Deploy Stylus messaging contract | `./scripts/deploy-contract.sh` |
+| `run-load-tests.sh` | Run load tests (configurable mode) | `./scripts/run-load-tests.sh [mode]` |
+| `run-burst-comparison.sh` | Deploy EVM messaging + burst comparison | `./scripts/run-burst-comparison.sh` |
+| `run-compute-comparison.sh` | Deploy both compute contracts + comparison | `./scripts/run-compute-comparison.sh` |
+| `check-status.sh` | Display pipeline status (requires jq) | `./scripts/check-status.sh` |
 
-## Usage Matrix
+## Load Test Modes
 
-| Skill | Read | Grep | Glob | Bash | Write | Edit |
-|---|---|---|---|---|---|---|
-| front-end | x | x | x | x | x | x |
-| security | x | x | x | x | x | x |
-| api | x | x | x | x | x | x |
-| data-integrity | x | x | x | x | x | x |
-| application-privacy | x | x | x | x | x | x |
-| kickoff | x | x | x | x | x | x |
-| status | x | x | x | — | — | — |
-| agent-teams | x | x | x | — | — | — |
+| Mode | Description | Command |
+|------|-------------|---------|
+| `messaging` | Sequential, concurrent, sustained, message-size | `./scripts/run-load-tests.sh messaging` |
+| `burst` | Stylus vs EVM messaging burst (50-500 TXs) | `./scripts/run-load-tests.sh burst` |
+| `compute` | Stylus vs EVM keccak256 (100-2000 iterations) | `./scripts/run-load-tests.sh compute` |
+| `all` | Run all test suites | `./scripts/run-load-tests.sh all` |
 
-## Skill Relationships
-
-```
-front-end ←→ api (RPC endpoints, contract ABI)
-front-end ←→ data-integrity (event sourcing, state display)
-security ←→ application-privacy (key management review)
-security ←→ data-integrity (storage layout, bridge state)
-api ←→ data-integrity (node config, event indexing)
-agent-teams → all (orchestrates testing across all domains)
-kickoff → agent-teams (runs full pipeline)
-status → agent-teams (reads pipeline state)
-```
+Set `LOAD_TEST_MODE` in `.env` to change the default.

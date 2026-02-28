@@ -1,141 +1,148 @@
-# Omega AI Dev Planning
+# Orbit Dual Load Test
 
-An AI-driven SDLC framework for building an Arbitrum L2 chain with a Stylus-based cross-chain messaging DApp. Uses Claude Code as the orchestration platform with skills for implementation and subagents for testing.
+Arbitrum Orbit L2 chain deployment with Stylus WASM vs EVM Solidity gas cost benchmarking. Deploys identical smart contracts in both runtimes and measures gas consumption under burst load to quantify Stylus's ink metering advantage.
 
-## What This Project Builds
+## Results Summary
 
-1. **Arbitrum Chain** — Deploy a custom L2 rollup via the Arbitrum Chain SDK
-2. **Stylus Messaging Contract** — Rust smart contract compiled to WASM for message storage and cross-chain bridging
-3. **Bridge Integration** — L2-to-L1 message passing via Arbitrum bridge contracts
-4. **Messaging Frontend** — React/Next.js UI with dual-chain wallet support
+| Test | Stylus Gas | EVM Gas | Discount | Notes |
+|------|-----------|---------|----------|-------|
+| Messaging burst (storage-heavy) | 167K | 120K | -39% | Stylus adds host-call overhead on SSTORE |
+| Compute 100 iters (keccak256) | 67K | 52K | -27% | Overhead dominates at low compute |
+| Compute 500 iters | 73K | 150K | **51%** | Ink metering advantage emerges |
+| Compute 1,000 iters | 81K | 277K | **70%** | Clear WASM computation win |
+| Compute 2,000 iters | 97K | 541K | **82%** | Discount scales with compute intensity |
 
-## Framework Architecture
+**Key finding:** Stylus is cheaper for compute-heavy workloads (51-82% gas savings) but more expensive for storage-heavy workloads due to host-call overhead on SSTORE operations.
 
-```
-CLAUDE.md (Engineering Manager)
-├── Pipeline Orchestration
-│   ├── /kickoff       — Run full SDLC pipeline end-to-end
-│   ├── /status        — Check pipeline progress and agent gates
-│   └── .claude/state/ — Shared state bus (pipeline.json, context, agent status)
-├── Skills (Implementation)
-│   ├── /front-end     — React/Next.js, wagmi, bridge UI
-│   ├── /security      — Stylus safety, bridge security
-│   ├── /api           — Node config, RPC, infrastructure
-│   ├── /data-integrity — Cross-chain state, storage
-│   ├── /application-privacy — Key management
-│   └── agent-teams    — Testing orchestration (internal)
-├── Subagents (Testing & Analysis)
-│   ├── read-code            — Codebase exploration, context generation
-│   ├── functional-tester    — Contract CRUD, chain ops
-│   ├── integration-tester   — Cross-chain round-trips
-│   ├── security-tester      — Vulnerability analysis
-│   ├── performance-tester   — Gas costs, latency
-│   ├── system-uat-tester    — User journeys, PRD validation
-│   ├── deployment-tester    — Deploy verification, smoke tests
-│   └── load-tester          — TPS throughput, bottleneck analysis
-└── Docs (Specifications)
-    ├── functional/    — PRDs (what to build)
-    ├── testing/       — Test specs (how to verify)
-    └── skills/        — Skill reference (who does what)
-```
+## Quick Start
 
-## Prerequisites
+### Prerequisites
 
-- **Rust** — nightly toolchain via rustup
-- **cargo-stylus** — `cargo install cargo-stylus`
-- **WASM target** — `rustup target add wasm32-unknown-unknown`
-- **Node.js** — >= 18.x
-- **Foundry** — `curl -L https://foundry.paradigm.xyz | bash && foundryup`
-- **Arbitrum Chain SDK** — `npm install @arbitrum/orbit-sdk`
+- [Node.js](https://nodejs.org/) >= 18
+- [Docker](https://docs.docker.com/get-docker/)
+- [Rust](https://rustup.rs/) + `cargo install cargo-stylus` + `rustup target add wasm32-unknown-unknown`
+- [Foundry](https://book.getfoundry.sh/getting-started/installation) (`forge`, `cast`, `anvil`)
+- An Infura or Alchemy API key for Sepolia fork
 
-## Getting Started
+### Setup & Run
 
-### 1. Run the Full Pipeline
-Start everything with a single command:
-```
-/kickoff
-```
-Or from the terminal:
 ```bash
+# 1. Clone and configure
+git clone https://github.com/ub-tech/orbit-dual-loadtest.git
+cd orbit-dual-loadtest
+cp .env.example .env
+# Edit .env — fill in private keys (use Anvil defaults for local dev)
+
+# 2. Run the guided pipeline
 ./scripts/kickoff.sh
 ```
 
-### 2. Check Pipeline Status
-From Claude:
-```
-/status
-```
-From the terminal:
+The kickoff script walks through all 8 steps interactively. Or run each step manually:
+
+### Manual Steps
+
 ```bash
-./scripts/check-status.sh
+# 1. Start Anvil forking Sepolia
+anvil --fork-url https://sepolia.infura.io/v3/<YOUR_KEY>
+
+# 2. Install dependencies
+npm install                            # Root: Orbit SDK + chain deploy
+cd tests/load && npm install && cd -   # Load test dependencies
+cd frontend && npm install && cd -     # Frontend (optional)
+
+# 3. Deploy L2 chain
+npx ts-node scripts/deploy-chain.ts
+# → Outputs: chain-config/nodeConfig.json, chain-config/coreContracts.json
+
+# 4. Start L2 node
+./scripts/start-node.sh
+# → Nitro node on http://localhost:8449
+# → Enables interval mining on Anvil (required for Nitro initialization)
+
+# 5. Deploy Stylus messaging contract
+./scripts/deploy-contract.sh
+# → Outputs: chain-config/contractAddress.txt
+
+# 6. Set contract address in .env
+#    MESSAGING_CONTRACT_ADDRESS=<address from step 5>
+#    NEXT_PUBLIC_MESSAGING_CONTRACT=<same address>
+
+# 7. Start frontend (optional)
+cd frontend && npm run dev
+
+# 8. Run load tests
+./scripts/run-load-tests.sh              # Default: messaging tests
+./scripts/run-load-tests.sh burst        # Stylus vs EVM messaging burst
+./scripts/run-load-tests.sh compute      # Stylus vs EVM keccak256 compute
+./scripts/run-load-tests.sh all          # Run everything
 ```
 
-### 3. Review the PRDs
-Start with the master PRD to understand the full scope:
-```
-docs/functional/top-level-prd.md
-```
+## Load Tests
 
-### 4. Use Skills for Implementation
-Invoke skills by name to get domain-specific guidance:
-```
-/front-end   — Build the messaging UI
-/security    — Review contract security
-/api         — Configure chain infrastructure
-```
+### Messaging Tests (PRD-003)
 
-### 5. Run Testing Phases
-Delegate to subagents sequentially:
-```
-read-code → functional → integration → security → performance → system-uat → deployment → load-test
+| Scenario | Description | Target |
+|----------|-------------|--------|
+| Sequential | 100 TXs, one at a time | >= 10 TPS |
+| Concurrent | 50 TXs, simultaneous | >= 20 TPS |
+| Sustained | 60 seconds continuous | >= 8 TPS |
+| Message Size | 32B, 256B, 1KB, 4KB payloads | Informational |
+
+```bash
+./scripts/run-load-tests.sh messaging           # All messaging scenarios
+./scripts/run-load-tests.sh messaging sequential # Single scenario
 ```
 
-### 6. Check Test Prerequisites
-Before testing, verify the environment:
-```
-docs/testing/preconditions-spec.md
-```
+### Burst Comparison (Stylus vs EVM)
 
-## Pipeline
+Compares `sendMessage()` gas cost between Stylus WASM and EVM Solidity under burst load (50-500 TXs). Storage-dominated workload.
 
-The `/kickoff` command runs 8 phases with automatic gate checking:
-
-```
-Phase 0:   Initialize    — Set up run ID, reset state
-Phase 0.5: Configure     — Target chain, env vars, tooling validation
-Phase 1:   Read Code     — Scan codebase, generate context
-Phase 2:   Requirements  — Verify all PRDs approved
-Phase 3:   Implementation — Run skills (/api, /security, /front-end)
-Phase 4:   Testing Gates — 6 sequential test agents
-Phase 5:   Load Test     — TPS measurement (PRD-003)
-Phase 6:   Final Push    — Commit + push (only if all gates pass)
+```bash
+./scripts/run-burst-comparison.sh
 ```
 
-The Configure phase asks for your target chain (Anvil or Sepolia), validates `.env` configuration, and checks that all required tools are installed before any work begins.
+### Compute Comparison (Stylus vs EVM)
 
-Git push is blocked until all gates pass. Status is checkable at any time via `/status` or `./scripts/check-status.sh`.
+Compares iterated `keccak256` gas cost (100-2000 iterations per TX, 100 TXs per tier). Computation-dominated workload — this is where Stylus's ink metering shines.
 
-## Key Documents
+```bash
+./scripts/run-compute-comparison.sh
+```
 
-| Document | Purpose |
-|---|---|
-| `CLAUDE.md` | EM orchestrator — role, navigation, conventions |
-| `docs/functional/top-level-prd.md` | Master PRD — vision and success criteria |
-| `docs/functional/func-prd-001-chain-deployment.md` | Chain SDK deployment spec |
-| `docs/functional/func-prd-002-stylus-messaging.md` | Stylus contract + bridge spec |
-| `docs/functional/func-prd-003-tps-load-test.md` | TPS load testing spec |
-| `.claude/state/pipeline.json` | Pipeline state and progress |
-| `docs/documentation-spec.md` | Document templates and standards |
-| `docs/testing/reporting-results-spec.md` | Test report format |
-| `docs/testing/preconditions-spec.md` | Environment prerequisites |
+## Contracts
+
+### Messaging Contracts
+- **Stylus** (`contracts/messaging/`): `sendMessage(string)`, `getMessage(uint256)`, `messageCount()`, `bridgeMessage(uint256)`
+- **EVM** (`contracts/messaging-evm/`): Same ABI, pure Solidity
+
+### Compute Contracts
+- **Stylus** (`contracts/compute-stylus/`): `computeHash(uint256 iterations)` → iterated keccak256, `callCount()`
+- **EVM** (`contracts/compute-evm/`): Same ABI, pure Solidity
+
+Both contract pairs use identical seeds and algorithms so gas measurements are directly comparable.
 
 ## Tech Stack
 
 | Layer | Technology |
-|---|---|
-| Chain Deployment | Arbitrum Chain SDK (TypeScript) |
-| Smart Contracts | Stylus Rust SDK (`stylus-sdk`) |
-| Bridge | Arbitrum bridge + `sol_interface!` |
-| Settlement | Anvil (local) or Sepolia (testnet) |
+|-------|-----------|
+| Chain Deployment | Arbitrum Orbit SDK (TypeScript) |
+| Smart Contracts | Stylus Rust SDK + Solidity 0.8.20 |
+| Bridge | Arbitrum ArbSys precompile |
+| Settlement | Anvil (Sepolia fork) |
 | Frontend | React / Next.js + wagmi + viem |
-| Tooling | cargo-stylus, Foundry, Arbitrum SDK |
+| Load Testing | TypeScript + viem (multi-account burst) |
+| Tooling | cargo-stylus, Foundry, Docker |
+
+## Project Documentation
+
+| Document | Purpose |
+|----------|---------|
+| `docs/functional/top-level-prd.md` | Master PRD |
+| `docs/functional/func-prd-001-chain-deployment.md` | Chain deployment spec |
+| `docs/functional/func-prd-002-stylus-messaging.md` | Stylus contract spec |
+| `docs/functional/func-prd-003-tps-load-test.md` | Load testing spec |
+| `docs/testing/reports/` | Test execution reports |
+
+## License
+
+MIT
