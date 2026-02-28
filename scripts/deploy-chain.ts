@@ -4,7 +4,7 @@
  * Deploys an Arbitrum rollup chain on a parent chain using the Orbit SDK.
  *
  * Supported parent chains:
- *   - Anvil forking Sepolia:  anvil --fork-url https://sepolia.infura.io/v3/<KEY>
+ *   - Anvil forking Sepolia:  anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP
  *   - Direct Sepolia RPC:     set PARENT_CHAIN_RPC to your Sepolia endpoint
  *   - Nitro testnode:         set PARENT_CHAIN_RPC=http://localhost:8545
  *
@@ -142,7 +142,7 @@ async function main(): Promise<void> {
     console.error('ERROR: Cannot reach the parent chain RPC at', parentChainRpc);
     console.error(
       'Make sure your parent chain is running.\n' +
-        'For local dev, fork Sepolia:  anvil --fork-url https://sepolia.infura.io/v3/<KEY>',
+        'For local dev, fork Sepolia:  anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP',
     );
     if (err instanceof Error) console.error(`  Detail: ${err.message}`);
     process.exit(1);

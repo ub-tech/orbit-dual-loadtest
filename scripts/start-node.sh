@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   1. Anvil must be running, forking Sepolia:
-#        anvil --fork-url https://sepolia.infura.io/v3/<KEY>
+#        anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP
 #   2. chain-config/nodeConfig.json must exist (run deploy-chain.ts first)
 #
 # Usage:
@@ -35,7 +35,7 @@ if ! curl -s -X POST "$PARENT_CHAIN_RPC" \
   -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
   | grep -q "result"; then
   echo "ERROR: Parent chain is not reachable at $PARENT_CHAIN_RPC"
-  echo "Start Anvil first:  anvil --fork-url https://sepolia.infura.io/v3/<KEY>"
+  echo "Start Anvil first:  anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP"
   exit 1
 fi
 echo "  Parent chain is reachable."

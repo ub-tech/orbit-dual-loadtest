@@ -132,7 +132,7 @@ if [ "$START_FROM" -le 1 ]; then
     echo "  Anvil is NOT running at $RPC."
     echo ""
     echo "  Start it in another terminal:"
-    echo "    anvil --fork-url https://sepolia.infura.io/v3/<YOUR_KEY>"
+    echo "    anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP"
     echo ""
     echo "  IMPORTANT: Plain 'anvil' won't work — Orbit SDK needs"
     echo "  the RollupCreator contract deployed on Sepolia."

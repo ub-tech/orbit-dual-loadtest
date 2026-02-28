@@ -22,7 +22,7 @@ Arbitrum Orbit L2 chain deployment with Stylus WASM vs EVM Solidity gas cost ben
 - [Docker](https://docs.docker.com/get-docker/)
 - [Rust](https://rustup.rs/) + `cargo install cargo-stylus` + `rustup target add wasm32-unknown-unknown`
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) (`forge`, `cast`, `anvil`)
-- An Infura or Alchemy API key for Sepolia fork
+- A Sepolia RPC endpoint (Tenderly public endpoint included in `.env.example`)
 
 ### Setup & Run
 
@@ -43,7 +43,7 @@ The kickoff script walks through all 8 steps interactively. Or run each step man
 
 ```bash
 # 1. Start Anvil forking Sepolia
-anvil --fork-url https://sepolia.infura.io/v3/<YOUR_KEY>
+anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP
 
 # 2. Install dependencies
 npm install                            # Root: Orbit SDK + chain deploy
