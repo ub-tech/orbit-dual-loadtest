@@ -1,0 +1,23 @@
+{
+  "name": "omega-ai-dev-planning",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Arbitrum L2 chain deployment and Stylus messaging DApp",
+  "scripts": {
+    "deploy": "ts-node scripts/deploy-chain.ts",
+    "verify": "ts-node scripts/verify-chain.ts"
+  },
+  "dependencies": {
+    "@arbitrum/orbit-sdk": "latest",
+    "dotenv": "^16.4.7",
+    "viem": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "^22.12.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

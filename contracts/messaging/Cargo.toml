@@ -1,0 +1,26 @@
+[package]
+name = "omega-messaging"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+stylus-sdk = "0.8"
+alloy-primitives = "0.8"
+alloy-sol-types = "0.8"
+
+[features]
+export-abi = ["stylus-sdk/export-abi"]
+
+[profile.release]
+codegen-units = 1
+strip = true
+lto = true
+panic = "abort"
+opt-level = "z"
+
+[[bin]]
+name = "omega-messaging"
+path = "src/main.rs"
+
+[lib]
+crate-type = ["lib", "cdylib"]

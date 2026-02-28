@@ -1,0 +1,38 @@
+# Environment (contains private keys)
+.env
+.env.local
+frontend/.env.local
+
+# Dependencies
+node_modules/
+
+# Build artifacts
+dist/
+target/
+out/
+cache/
+*.wasm
+
+# Generated chain config (deployment-specific)
+chain-config/
+
+# Test result output
+tests/load/results.json
+tests/load/burst-results.json
+tests/load/compute-results.json
+
+# Lock files (regenerated on install)
+package-lock.json
+Cargo.lock
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.swp
+
+# Claude Code local state
+.claude/
+
+# Next.js
+frontend/.next/

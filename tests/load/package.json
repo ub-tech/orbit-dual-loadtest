@@ -1,0 +1,23 @@
+{
+  "name": "omega-load-tests",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "test:sequential": "ts-node src/sequential.ts",
+    "test:concurrent": "ts-node src/concurrent.ts",
+    "test:sustained": "ts-node src/sustained.ts",
+    "test:message-size": "ts-node src/message-size.ts",
+    "test:all": "ts-node src/run-all.ts",
+    "test:burst": "ts-node src/burst-comparison.ts",
+    "test:compute": "ts-node src/compute-comparison.ts"
+  },
+  "dependencies": {
+    "viem": "^2.21.0",
+    "dotenv": "^16.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^22.0.0"
+  }
+}
