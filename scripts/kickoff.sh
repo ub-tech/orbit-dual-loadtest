@@ -132,7 +132,7 @@ if [ "$START_FROM" -le 1 ]; then
     echo "  Anvil is NOT running at $RPC."
     echo ""
     echo "  Start it in another terminal:"
-    echo "    anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP"
+    echo "    anvil --fork-url \$SEPOLIA_RPC_URL  (set SEPOLIA_RPC_URL in .env)"
     echo ""
     echo "  IMPORTANT: Plain 'anvil' won't work — Orbit SDK needs"
     echo "  the RollupCreator contract deployed on Sepolia."
@@ -179,16 +179,51 @@ fi
 if [ "$START_FROM" -le 3 ]; then
   step_header 3 "Deploy L2 chain"
 
-  if [ -f "chain-config/nodeConfig.json" ]; then
-    echo "  chain-config/nodeConfig.json already exists."
-    echo "  Skipping chain deployment (delete chain-config/ to re-deploy)."
+  NEED_DEPLOY=false
+
+  if [ ! -f "chain-config/nodeConfig.json" ]; then
+    NEED_DEPLOY=true
   else
+    # nodeConfig.json exists — verify the rollup contracts are still on-chain.
+    # After an Anvil restart, previously deployed contracts vanish.
+    ROLLUP_ADDR=$(python3 -c "
+import json, re
+cfg = json.load(open('chain-config/nodeConfig.json'))
+info = json.loads(cfg['chain']['info-json'])
+print(info[0]['rollup']['rollup'])
+" 2>/dev/null || echo "")
+
+    if [ -n "$ROLLUP_ADDR" ]; then
+      CODE=$(curl -s -X POST "$RPC" \
+        -H "Content-Type: application/json" \
+        -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getCode\",\"params\":[\"$ROLLUP_ADDR\",\"latest\"],\"id\":1}" \
+        2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('result','0x'))" 2>/dev/null || echo "0x")
+
+      if [ "$CODE" = "0x" ] || [ -z "$CODE" ]; then
+        echo "  chain-config/nodeConfig.json exists but rollup contract ($ROLLUP_ADDR)"
+        echo "  has no code on-chain. Anvil was likely restarted."
+        echo "  Cleaning stale config and re-deploying..."
+        rm -rf chain-config/
+        NEED_DEPLOY=true
+      fi
+    else
+      echo "  Could not parse rollup address from nodeConfig.json. Re-deploying..."
+      rm -rf chain-config/
+      NEED_DEPLOY=true
+    fi
+  fi
+
+  if [ "$NEED_DEPLOY" = true ]; then
+    mkdir -p chain-config
     echo "  Deploying Arbitrum L2 chain via Orbit SDK..."
     npx ts-node scripts/deploy-chain.ts
     echo ""
     echo "  Chain deployed. Outputs:"
     echo "    chain-config/nodeConfig.json"
     echo "    chain-config/coreContracts.json"
+  else
+    echo "  chain-config/nodeConfig.json exists and rollup contract is live on-chain."
+    echo "  Skipping chain deployment (delete chain-config/ to re-deploy)."
   fi
 fi
 

@@ -4,7 +4,7 @@
 #
 # Prerequisites:
 #   1. Anvil must be running, forking Sepolia:
-#        anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP
+#        anvil --fork-url $SEPOLIA_RPC_URL  (set SEPOLIA_RPC_URL in .env)
 #   2. chain-config/nodeConfig.json must exist (run deploy-chain.ts first)
 #
 # Usage:
@@ -35,10 +35,41 @@ if ! curl -s -X POST "$PARENT_CHAIN_RPC" \
   -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
   | grep -q "result"; then
   echo "ERROR: Parent chain is not reachable at $PARENT_CHAIN_RPC"
-  echo "Start Anvil first:  anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP"
+  echo "Start Anvil first:  anvil --fork-url \$SEPOLIA_RPC_URL  (set SEPOLIA_RPC_URL in .env)"
   exit 1
 fi
 echo "  Parent chain is reachable."
+
+# ---------------------------------------------------------------------------
+# Verify rollup contracts exist on-chain
+#
+# After an Anvil restart, all previously deployed contracts vanish. Detect
+# this early instead of letting the Nitro node crash with a cryptic error.
+# ---------------------------------------------------------------------------
+echo "Verifying rollup contracts on parent chain..."
+ROLLUP_ADDR=$(python3 -c "
+import json
+cfg = json.load(open('$NODE_CONFIG'))
+info = json.loads(cfg['chain']['info-json'])
+print(info[0]['rollup']['rollup'])
+" 2>/dev/null || echo "")
+
+if [ -n "$ROLLUP_ADDR" ]; then
+  CODE=$(curl -s -X POST "$PARENT_CHAIN_RPC" \
+    -H "Content-Type: application/json" \
+    -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getCode\",\"params\":[\"$ROLLUP_ADDR\",\"latest\"],\"id\":1}" \
+    2>/dev/null | python3 -c "import sys,json; print(json.load(sys.stdin).get('result','0x'))" 2>/dev/null || echo "0x")
+
+  if [ "$CODE" = "0x" ] || [ -z "$CODE" ]; then
+    echo "ERROR: Rollup contract ($ROLLUP_ADDR) has no code on-chain."
+    echo "Anvil was likely restarted. Re-deploy the chain first:"
+    echo "  rm -rf chain-config/ && npx ts-node scripts/deploy-chain.ts"
+    exit 1
+  fi
+  echo "  Rollup contract verified."
+else
+  echo "WARNING: Could not parse rollup address from nodeConfig.json."
+fi
 
 # ---------------------------------------------------------------------------
 # Enable interval mining on Anvil
@@ -74,7 +105,7 @@ echo "  Config : $NODE_CONFIG"
 echo "  L2 RPC : http://localhost:$L2_PORT"
 echo ""
 
-docker run --rm -d \
+docker run -d \
   --name "$CONTAINER_NAME" \
   -v "$NODE_CONFIG":/config/nodeConfig.json \
   -p "$L2_PORT":8449 \
@@ -88,14 +119,27 @@ docker run --rm -d \
 
 # ---------------------------------------------------------------------------
 # Wait for HTTP server to start
+#
+# The --init.force flag causes a full genesis re-initialization on every
+# start, which typically takes 60-90 seconds. We allow up to 120 seconds.
 # ---------------------------------------------------------------------------
-echo "Waiting for L2 HTTP server..."
-for i in $(seq 1 30); do
+TIMEOUT=120
+echo "Waiting for L2 HTTP server (up to ${TIMEOUT}s — init.force takes ~60-90s)..."
+for i in $(seq 1 $TIMEOUT); do
+  # Bail early if the container exited
+  if ! docker ps -q --filter "name=$CONTAINER_NAME" | grep -q .; then
+    echo ""
+    echo "ERROR: Container $CONTAINER_NAME exited unexpectedly."
+    echo "Check logs: docker logs $CONTAINER_NAME"
+    exit 1
+  fi
+
   if curl -s -X POST "http://localhost:$L2_PORT" \
     -H "Content-Type: application/json" \
     -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
     2>/dev/null | grep -q "result"; then
-    echo "  L2 node is ready!"
+    echo ""
+    echo "  L2 node is ready! (took ${i}s)"
     echo ""
     echo "Chain ID : $(curl -s -X POST "http://localhost:$L2_PORT" -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' | python3 -c "import sys,json; print(int(json.load(sys.stdin)['result'],16))" 2>/dev/null || echo "?")"
     echo "RPC URL  : http://localhost:$L2_PORT"
@@ -104,9 +148,14 @@ for i in $(seq 1 30); do
     echo "Stop    : docker stop $CONTAINER_NAME"
     exit 0
   fi
+  # Print progress every 10 seconds
+  if (( i % 10 == 0 )); then
+    echo "  ... ${i}s elapsed (waiting for HTTP server)"
+  fi
   sleep 1
 done
 
-echo "ERROR: L2 node did not start within 30 seconds."
+echo ""
+echo "ERROR: L2 node did not start within ${TIMEOUT} seconds."
 echo "Check logs: docker logs $CONTAINER_NAME"
 exit 1

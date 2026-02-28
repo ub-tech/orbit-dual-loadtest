@@ -22,7 +22,7 @@ Arbitrum Orbit L2 chain deployment with Stylus WASM vs EVM Solidity gas cost ben
 - [Docker](https://docs.docker.com/get-docker/)
 - [Rust](https://rustup.rs/) + `cargo install cargo-stylus` + `rustup target add wasm32-unknown-unknown`
 - [Foundry](https://book.getfoundry.sh/getting-started/installation) (`forge`, `cast`, `anvil`)
-- A Sepolia RPC endpoint (Tenderly public endpoint included in `.env.example`)
+- A Sepolia RPC endpoint (set `SEPOLIA_RPC_URL` in `.env`)
 
 ### Setup & Run
 
@@ -31,7 +31,7 @@ Arbitrum Orbit L2 chain deployment with Stylus WASM vs EVM Solidity gas cost ben
 git clone https://github.com/ub-tech/orbit-dual-loadtest.git
 cd orbit-dual-loadtest
 cp .env.example .env
-# Edit .env — fill in private keys (use Anvil defaults for local dev)
+# Edit .env — set SEPOLIA_RPC_URL to your Sepolia RPC endpoint
 
 # 2. Run the guided pipeline
 ./scripts/kickoff.sh
@@ -42,8 +42,8 @@ The kickoff script walks through all 8 steps interactively. Or run each step man
 ### Manual Steps
 
 ```bash
-# 1. Start Anvil forking Sepolia
-anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP
+# 1. Start Anvil forking Sepolia (set SEPOLIA_RPC_URL in .env first)
+source .env && anvil --fork-url $SEPOLIA_RPC_URL
 
 # 2. Install dependencies
 npm install                            # Root: Orbit SDK + chain deploy

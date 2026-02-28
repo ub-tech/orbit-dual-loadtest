@@ -4,7 +4,7 @@
  * Deploys an Arbitrum rollup chain on a parent chain using the Orbit SDK.
  *
  * Supported parent chains:
- *   - Anvil forking Sepolia:  anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP
+ *   - Anvil forking Sepolia:  anvil --fork-url $SEPOLIA_RPC_URL
  *   - Direct Sepolia RPC:     set PARENT_CHAIN_RPC to your Sepolia endpoint
  *   - Nitro testnode:         set PARENT_CHAIN_RPC=http://localhost:8545
  *
@@ -142,7 +142,7 @@ async function main(): Promise<void> {
     console.error('ERROR: Cannot reach the parent chain RPC at', parentChainRpc);
     console.error(
       'Make sure your parent chain is running.\n' +
-        'For local dev, fork Sepolia:  anvil --fork-url https://sepolia.gateway.tenderly.co/5NjRfgC8tfKE9gozLvyymP',
+        'For local dev, fork Sepolia:  anvil --fork-url $SEPOLIA_RPC_URL  (set in .env)',
     );
     if (err instanceof Error) console.error(`  Detail: ${err.message}`);
     process.exit(1);
@@ -160,6 +160,8 @@ async function main(): Promise<void> {
       arbitrum: {
         InitialChainOwner: deployer.address,
         DataAvailabilityCommittee: false,
+        MaxCodeSize: 65536,     // 64 KB — default 24 KB is too small for Stylus WASM
+        MaxInitCodeSize: 131072, // 128 KB
       },
     });
     console.log('  Chain config prepared successfully.');
@@ -258,7 +260,71 @@ async function main(): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // 7. Generate node config
+  // 7. Fund deployer on L2 via Inbox.createRetryableTicket()
+  //
+  // The deployer (chain owner) has ETH on L1 but zero on L2. We use
+  // createRetryableTicket (not depositEth) because depositEth applies
+  // the L1-to-L2 address alias, sending funds to the wrong address.
+  // createRetryableTicket lets us specify the exact L2 recipient.
+  // -----------------------------------------------------------------------
+  const DEPOSIT_AMOUNT = BigInt(10) * BigInt('1000000000000000000'); // 10 ETH
+  const MAX_SUBMISSION_COST = BigInt('10000000000000000');           // 0.01 ETH
+  const GAS_LIMIT = BigInt(100000);
+  const MAX_FEE_PER_GAS = BigInt('1000000000');                     // 1 gwei
+  const TOTAL_VALUE = DEPOSIT_AMOUNT + MAX_SUBMISSION_COST + GAS_LIMIT * MAX_FEE_PER_GAS;
+  const inboxAddress = (coreContracts as any).inbox as Address;
+
+  console.log(`\nFunding deployer on L2 via Inbox.createRetryableTicket() (${Number(DEPOSIT_AMOUNT) / 1e18} ETH)...`);
+  try {
+    const { encodeFunctionData } = await import('viem');
+    const inboxAbi = [{
+      name: 'createRetryableTicket',
+      type: 'function',
+      stateMutability: 'payable',
+      inputs: [
+        { name: 'to', type: 'address' },
+        { name: 'l2CallValue', type: 'uint256' },
+        { name: 'maxSubmissionCost', type: 'uint256' },
+        { name: 'excessFeeRefundAddress', type: 'address' },
+        { name: 'callValueRefundAddress', type: 'address' },
+        { name: 'gasLimit', type: 'uint256' },
+        { name: 'maxFeePerGas', type: 'uint256' },
+        { name: 'data', type: 'bytes' },
+      ],
+      outputs: [{ type: 'uint256' }],
+    }] as const;
+
+    const data = encodeFunctionData({
+      abi: inboxAbi,
+      functionName: 'createRetryableTicket',
+      args: [
+        deployer.address,   // to: credit deployer on L2
+        DEPOSIT_AMOUNT,      // l2CallValue
+        MAX_SUBMISSION_COST, // maxSubmissionCost
+        deployer.address,    // excessFeeRefundAddress
+        deployer.address,    // callValueRefundAddress
+        GAS_LIMIT,           // gasLimit for auto-redeem
+        MAX_FEE_PER_GAS,     // maxFeePerGas
+        '0x' as `0x${string}`, // empty calldata
+      ],
+    });
+
+    const depositTxHash = await parentChainWalletClient.sendTransaction({
+      to: inboxAddress,
+      value: TOTAL_VALUE,
+      data,
+    } as any);
+    await parentChainPublicClient.waitForTransactionReceipt({ hash: depositTxHash });
+    console.log(`  Deposited ${Number(DEPOSIT_AMOUNT) / 1e18} ETH to L2 for deployer (${deployer.address}).`);
+    console.log('  Note: Funds arrive after the L2 node processes the delayed inbox message (~30s).');
+  } catch (err) {
+    console.error('WARNING: Failed to deposit ETH to L2 for deployer.');
+    if (err instanceof Error) console.error(`  Detail: ${err.message}`);
+    console.error('  You may need to manually fund the deployer on L2 before deploying contracts.');
+  }
+
+  // -----------------------------------------------------------------------
+  // 8. Generate node config
   // -----------------------------------------------------------------------
   console.log('\nGenerating node configuration...');
 
@@ -283,7 +349,7 @@ async function main(): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // 7b. Patch node config for local dev (Anvil fork)
+  // 8b. Patch node config for local dev (Anvil fork)
   //
   // The SDK generates config targeting a real Sepolia node with beacon
   // chain and remote DAS servers. For local Anvil we need to:
@@ -302,7 +368,7 @@ async function main(): Promise<void> {
   }
 
   // -----------------------------------------------------------------------
-  // 8. Write output files
+  // 9. Write output files
   // -----------------------------------------------------------------------
   const outDir = path.resolve(__dirname, '..', 'chain-config');
   if (!fs.existsSync(outDir)) {
