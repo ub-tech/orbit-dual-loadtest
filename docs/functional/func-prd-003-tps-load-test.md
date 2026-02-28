@@ -2,7 +2,7 @@
 
 **Status:** Approved
 **Date:** 2026-02-27
-**Author:** EM (CLAUDE.md Orchestrator)
+**Author:** Engineering
 **Depends On:** PRD-001 (running chain), PRD-002 (deployed contract)
 
 ## Purpose

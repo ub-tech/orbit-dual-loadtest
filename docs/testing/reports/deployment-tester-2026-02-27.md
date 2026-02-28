@@ -360,7 +360,7 @@ cast send $MESSAGING_CONTRACT_ADDRESS "send_message(string)(uint256)" "hello wor
 - **Description:** The root `node_modules/` directory does not exist, meaning `@arbitrum/orbit-sdk`, `viem`, and `dotenv` are not installed. Running `npm run deploy` or `npx ts-node scripts/deploy-chain.ts` will fail immediately with a module resolution error.
 - **Steps to Reproduce:** `npm run deploy` from project root without first running `npm install`.
 - **Expected Behavior:** `npm install` is a documented prerequisite step before running any deployment script.
-- **Actual Behavior:** `node_modules/` is absent; no documentation in README or CLAUDE.md explicitly states `npm install` must be run first.
+- **Actual Behavior:** `node_modules/` is absent; no documentation in README or project spec explicitly states `npm install` must be run first.
 - **Evidence:** `ls node_modules/` returns "No such file or directory". `package.json` lists `@arbitrum/orbit-sdk` as a dependency.
 - **Recommendation:** Document `npm install` as an explicit prerequisite in `README.md` and in the `deploy-chain.ts` script header comment. Consider adding a guard to `scripts/deploy-chain.ts` that prints a clear error if `node_modules/@arbitrum/orbit-sdk` is not present (beyond the existing SDK try/catch).
 
@@ -430,5 +430,5 @@ Once these two blockers are resolved, the deployment pipeline is otherwise well-
 - [x] No S1 findings — deployment not critically blocked by security or data loss issues
 - [ ] S2 finding DEP-001 (stylus-sdk version mismatch) not yet resolved — must fix before contract deployment
 - [ ] S3 findings DEP-002, DEP-003, DEP-004, DEP-005 require resolution before production deployment
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [ ] Ready for next phase gate: **CONDITIONAL — S2 must be resolved first**

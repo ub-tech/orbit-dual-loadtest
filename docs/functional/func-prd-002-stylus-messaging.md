@@ -1,7 +1,7 @@
 # PRD-002: Stylus Messaging Contract + Bridge Integration
 
 **Status:** Approved
-**Author:** EM (CLAUDE.md Orchestrator)
+**Author:** Engineering
 **Date:** 2026-02-27
 **Parent:** [top-level-prd.md](top-level-prd.md)
 

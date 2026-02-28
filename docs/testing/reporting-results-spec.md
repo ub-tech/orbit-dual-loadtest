@@ -55,7 +55,7 @@ Each testing agent produces a report with:
 
 ## Sign-Off
 - [ ] All S1/S2 findings resolved or waived
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [ ] Ready for next phase gate
 ```
 

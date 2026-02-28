@@ -448,5 +448,5 @@ Bridge latency measurement is OUT OF SCOPE per PRD-003. No code gaps identified 
 - [ ] S2 finding PERF-002 (Scenario 5 missing) requires documented mitigation or deferred milestone before final gate
 - [x] S3/S4 findings are informational; do not block gate
 - [x] Gas estimates for implemented functions are within PRD-003 budgets
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [x] Ready for next phase gate (conditional on PERF-002 mitigation)

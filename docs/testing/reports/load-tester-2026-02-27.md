@@ -294,5 +294,5 @@ The `reporting-results-spec.md` format requires a finding ID prefix (`LOAD-`), a
 - [x] S4 finding (LOAD-004) is documented — cosmetic logic improvement
 - [x] Runtime validation blocked pending live L2 chain — noted as BLOCKED in matrix
 - [ ] All S1/S2 findings resolved or waived — N/A (none present)
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [ ] Ready for next phase gate

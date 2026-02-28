@@ -7,43 +7,29 @@
 | [reporting-results-spec.md](reporting-results-spec.md) | Test report format, severity levels, finding template | Approved |
 | [preconditions-spec.md](preconditions-spec.md) | Environment, account, and network prerequisites | Approved |
 
-## Agents
-
-| Agent | Model | Focus | Location |
-|---|---|---|---|
-| read-code | sonnet | Codebase exploration, context generation | [.claude/agents/read-code.md](../../.claude/agents/read-code.md) |
-| functional-tester | sonnet | Contract CRUD, chain deployment, frontend flows | [.claude/agents/functional-tester.md](../../.claude/agents/functional-tester.md) |
-| integration-tester | sonnet | Cross-chain round-trips, component boundaries | [.claude/agents/integration-tester.md](../../.claude/agents/integration-tester.md) |
-| security-tester | opus | Stylus security, bridge attacks, chain config | [.claude/agents/security-tester.md](../../.claude/agents/security-tester.md) |
-| performance-tester | sonnet | Gas costs, bridge latency, storage efficiency | [.claude/agents/performance-tester.md](../../.claude/agents/performance-tester.md) |
-| system-uat-tester | opus | Full user journeys, PRD criteria validation | [.claude/agents/system-uat-tester.md](../../.claude/agents/system-uat-tester.md) |
-| deployment-tester | sonnet | cargo stylus deploy, createRollup, smoke tests | [.claude/agents/deployment-tester.md](../../.claude/agents/deployment-tester.md) |
-| load-tester | sonnet | TPS throughput, latency, bottleneck analysis | [.claude/agents/load-tester.md](../../.claude/agents/load-tester.md) |
-
-## Pipeline
+## Test Phases
 
 ```
-Phase 0: Read Code     → Gate: codebase-context.md generated
-Phase 1: Functional    → Gate: core functions work
-Phase 2: Integration   → Gate: component boundaries verified
-Phase 3: Security      → Gate: zero S1, S2 mitigated
-Phase 4: Performance   → Gate: gas within budget
-Phase 5: System/UAT    → Gate: PRD criteria met
-Phase 6: Deployment    → Gate: smoke tests pass
-Phase 7: Load Test     → Gate: TPS meets PRD-003 targets
+Phase 1: Functional    → Core functions work (contract CRUD, chain ops)
+Phase 2: Integration   → Component boundaries verified (cross-chain round-trips)
+Phase 3: Security      → Zero S1, S2 mitigated (Stylus safety, bridge attacks)
+Phase 4: Performance   → Gas within budget (costs, latency, storage efficiency)
+Phase 5: System/UAT    → PRD criteria met (full user journeys)
+Phase 6: Deployment    → Smoke tests pass (deploy + verify)
+Phase 7: Load Test     → TPS meets PRD-003 targets
 ```
-
-## Pipeline State
-
-| File | Purpose |
-|---|---|
-| `.claude/state/pipeline.json` | Pipeline progress, phase statuses, push control |
-| `.claude/state/codebase-context.md` | Repository context (written by read-code agent) |
-| `.claude/state/agent-status/<agent>.json` | Per-agent status, findings, gate result |
 
 ## Reports
 
 Test reports are stored in `docs/testing/reports/` with naming convention:
-`<agent>-<YYYY-MM-DD>.md`
+`<phase>-<YYYY-MM-DD>.md`
 
-Example: `security-tester-2026-02-27.md`
+| Report | Phase | Date |
+|--------|-------|------|
+| [functional-tester-2026-02-27.md](reports/functional-tester-2026-02-27.md) | Functional | 2026-02-27 |
+| [integration-tester-2026-02-27.md](reports/integration-tester-2026-02-27.md) | Integration | 2026-02-27 |
+| [security-tester-2026-02-27.md](reports/security-tester-2026-02-27.md) | Security | 2026-02-27 |
+| [performance-tester-2026-02-27.md](reports/performance-tester-2026-02-27.md) | Performance | 2026-02-27 |
+| [system-uat-tester-2026-02-27.md](reports/system-uat-tester-2026-02-27.md) | System/UAT | 2026-02-27 |
+| [deployment-tester-2026-02-27.md](reports/deployment-tester-2026-02-27.md) | Deployment | 2026-02-27 |
+| [load-tester-2026-02-27.md](reports/load-tester-2026-02-27.md) | Load Test | 2026-02-27 |

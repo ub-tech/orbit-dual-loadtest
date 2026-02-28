@@ -9,8 +9,7 @@ Defines document templates, formatting rules, and lifecycle management for all p
 |---|---|---|
 | PRD | `docs/functional/` | `func-prd-NNN-<slug>.md` |
 | Test Spec | `docs/testing/` | `<topic>-spec.md` |
-| Skill Spec | `.claude/skills/<domain>/SKILL.md` | Fixed name per skill |
-| Agent Spec | `.claude/agents/` | `<role>-tester.md` |
+| Test Report | `docs/testing/reports/` | `<phase>-<YYYY-MM-DD>.md` |
 
 ## Template: PRD
 

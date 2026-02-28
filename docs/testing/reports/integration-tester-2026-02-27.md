@@ -99,7 +99,7 @@
   2. Observe whether WASM validation passes or fails with SDK/CLI version mismatch errors
 - **Expected Behavior:** `cargo stylus check` passes cleanly with no version-related warnings or errors
 - **Actual Behavior:** Cannot confirm at static analysis time; there is a known compatibility gap between stylus-sdk 0.6.0 and cargo-stylus 0.10.0
-- **Evidence:** `contracts/messaging/Cargo.toml` line 7: `stylus-sdk = "0.6.0"`. `.claude/state/codebase-context.md` line 148: `cargo stylus 0.10.0`.
+- **Evidence:** `contracts/messaging/Cargo.toml` line 7: `stylus-sdk = "0.6.0"`. `cargo stylus --version` reports 0.10.0.
 - **Recommendation:** Update `Cargo.toml` to `stylus-sdk = "0.8.0"` (or the latest version compatible with `cargo-stylus 0.10.0`). Verify compatibility matrix in the Arbitrum Stylus release notes. Run `cargo stylus check` after updating to confirm.
 
 ---
@@ -195,13 +195,13 @@
 
 ---
 
-### Finding: BridgeStatus bridge lifecycle states incomplete relative to CLAUDE.md spec
+### Finding: BridgeStatus bridge lifecycle states incomplete relative to project spec
 
 - **ID:** INT-010
 - **Severity:** S4
 - **Category:** Integration
 - **Component:** `frontend/src/components/BridgeStatus.tsx`
-- **Description:** The CLAUDE.md engineering spec (and `codebase-context.md`) defines the bridge message lifecycle as: `Submitted → Batched → Asserted → Confirmed → Executable → Executed` (6 states). The `BridgeStatus` component implements only 3 states: `pending`, `batched`, `confirmed`. The states `asserted`, `executable`, and `executed` are absent. The `BridgeEvent` interface and `BridgeTimeline` component do not model these states. This means the UI cannot show when a message is `executable` (ready to claim on L1) or `executed` (claimed), which are the most user-actionable states in the bridge lifecycle.
+- **Description:** The project spec (and `codebase-context.md`) defines the bridge message lifecycle as: `Submitted → Batched → Asserted → Confirmed → Executable → Executed` (6 states). The `BridgeStatus` component implements only 3 states: `pending`, `batched`, `confirmed`. The states `asserted`, `executable`, and `executed` are absent. The `BridgeEvent` interface and `BridgeTimeline` component do not model these states. This means the UI cannot show when a message is `executable` (ready to claim on L1) or `executed` (claimed), which are the most user-actionable states in the bridge lifecycle.
 - **Steps to Reproduce:**
   1. Bridge a message
   2. Wait for the challenge period to elapse
@@ -209,7 +209,7 @@
   4. There is no UI affordance to execute the message on L1
 - **Expected Behavior:** Bridge timeline shows all 6 lifecycle states; `executable` state triggers an L1 execution CTA
 - **Actual Behavior:** Only 3 states modeled; `asserted`, `executable`, `executed` are absent
-- **Evidence:** `BridgeStatus.tsx` lines 16-17: `status: 'pending' | 'batched' | 'confirmed'`. CLAUDE.md: `Submitted → Batched → Asserted → Confirmed → Executable → Executed`
+- **Evidence:** `BridgeStatus.tsx` lines 16-17: `status: 'pending' | 'batched' | 'confirmed'`. project spec: `Submitted → Batched → Asserted → Confirmed → Executable → Executed`
 - **Recommendation:** Extend `BridgeEvent.status` to include all 6 lifecycle states. Poll the Arbitrum bridge outbox API or use `useWatchContractEvent` on the L1 Outbox contract to detect `executed` transitions.
 
 ---
@@ -312,7 +312,7 @@
   - INT-001 (S2): ABI selector consistency — recommend `cargo stylus export-abi` verification before deployment
   - INT-002 (S2): Contract address not persisted — deploy script must be fixed before load tests can run
   - INT-003 (S2): BridgeStatus raw log parsing — functional workaround exists but fragile; fix before system UAT
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [ ] Ready for next phase gate
 
 **Gate recommendation: FAIL** — S2 findings INT-001, INT-002, INT-003 require resolution or documented mitigations before the integration gate can pass. INT-001 and INT-003 have mitigations available (static ABI comparison and known-working raw parsing), but INT-002 breaks the pipeline handoff between deploy and load tests with no workaround other than manual intervention.

@@ -251,14 +251,14 @@ Each criterion from `docs/functional/top-level-prd.md` is mapped to its implemen
 - **Severity:** S3
 - **Category:** UAT
 - **Component:** `frontend/src/components/BridgeStatus.tsx`
-- **Description:** The CLAUDE.md specification defines the bridge lifecycle as 6 states: `Submitted -> Batched -> Asserted -> Confirmed -> Executable -> Executed`. The BridgeStatus component implements only 3: `pending`, `batched`, `confirmed`. The states `asserted`, `executable`, and `executed` are absent. The `executable` state is particularly important as it signals when the user can claim the message on L1. Without these states, the UI cannot guide the user through the final bridge execution step.
+- **Description:** The project specification defines the bridge lifecycle as 6 states: `Submitted -> Batched -> Asserted -> Confirmed -> Executable -> Executed`. The BridgeStatus component implements only 3: `pending`, `batched`, `confirmed`. The states `asserted`, `executable`, and `executed` are absent. The `executable` state is particularly important as it signals when the user can claim the message on L1. Without these states, the UI cannot guide the user through the final bridge execution step.
 - **Steps to Reproduce:**
   1. Bridge a message
   2. Wait for challenge period
   3. UI shows "confirmed" but cannot indicate "executable" or "executed"
 - **Expected Behavior:** All 6 bridge lifecycle states tracked and displayed.
 - **Actual Behavior:** Only 3 states. No L1 outbox polling for terminal states.
-- **Evidence:** `BridgeStatus.tsx` line 16: `status: 'pending' | 'batched' | 'confirmed'`. CLAUDE.md: 6-state lifecycle.
+- **Evidence:** `BridgeStatus.tsx` line 16: `status: 'pending' | 'batched' | 'confirmed'`. project spec: 6-state lifecycle.
 - **Recommendation:** Extend `BridgeEvent.status` union type. Add L1 outbox contract event watching for state transitions beyond `confirmed`. This requires L1 RPC integration which is a significant feature addition -- acceptable to defer to a future milestone.
 
 ---
@@ -400,5 +400,5 @@ The system is ready for the deployment testing phase, with the understanding tha
 - [x] S2 findings have documented mitigations
 - [x] Edge cases analyzed (8 cases: 5 handled, 3 partial)
 - [x] Cumulative findings from 4 prior reports cross-referenced
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [x] Ready for next phase gate

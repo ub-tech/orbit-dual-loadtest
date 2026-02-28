@@ -20,7 +20,7 @@
 - **Severity:** S2
 - **Category:** Security
 - **Component:** `contracts/messaging/src/lib.rs` (line 182)
-- **Description:** The `bridge_message` function creates a `Call::new()` configuration with default gas settings when invoking `ArbSys.sendTxToL1()`. No explicit gas limit is set on the cross-contract call. A malicious or misbehaving precompile interaction (or future ArbSys upgrade) could consume all remaining gas, causing unexpected out-of-gas reverts for callers. The SKILL.md security checklist specifically flags this: "Bridge calls have gas limits set."
+- **Description:** The `bridge_message` function creates a `Call::new()` configuration with default gas settings when invoking `ArbSys.sendTxToL1()`. No explicit gas limit is set on the cross-contract call. A malicious or misbehaving precompile interaction (or future ArbSys upgrade) could consume all remaining gas, causing unexpected out-of-gas reverts for callers. The security checklist specifically flags this: "Bridge calls have gas limits set."
 - **Steps to Reproduce:**
   1. Read `contracts/messaging/src/lib.rs` line 182
   2. Observe `let config = stylus_sdk::call::Call::new();` has no `.gas(limit)` call

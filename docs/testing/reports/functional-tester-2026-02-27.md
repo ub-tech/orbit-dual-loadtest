@@ -309,5 +309,5 @@ All function signatures, event schemas, and error definitions are consistent bet
 
 - [x] Zero S1 findings
 - [ ] S2 findings have mitigations noted — FUNC-001 (sdk version mismatch) requires a dependency update before `cargo stylus check` can succeed; mitigation is straightforward (update Cargo.toml)
-- [ ] Report reviewed by EM (CLAUDE.md orchestrator)
+- [ ] Report reviewed
 - [ ] Ready for next phase gate — pending EM review of FUNC-001 mitigation

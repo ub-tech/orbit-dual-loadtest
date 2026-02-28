@@ -2,7 +2,7 @@
 
 **Status:** Approved
 **Date:** 2026-02-27
-**Author:** EM (CLAUDE.md Orchestrator)
+**Author:** Engineering
 
 ## Vision
 
@@ -48,7 +48,7 @@ Cross-chain messaging requires coordinating chain deployment, smart contract dev
 - Stylus smart contract development (Rust)
 - Cross-chain bridge messaging (L2 → L1)
 - React/Next.js frontend with wallet integration
-- Automated testing framework via Claude subagents
+- Automated load testing framework
 
 ### Out of Scope
 - Production mainnet deployment
