@@ -42,6 +42,7 @@ echo ""
 
 echo "[1/6] Building Stylus compute contract..."
 cd "$STYLUS_DIR"
+cargo generate-lockfile 2>/dev/null || true
 cargo stylus check --endpoint "$RPC"
 echo "  Stylus WASM validation OK."
 echo ""

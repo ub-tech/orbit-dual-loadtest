@@ -131,11 +131,21 @@ if [ "$START_FROM" -le 1 ]; then
   else
     echo "  Anvil is NOT running at $RPC."
     echo ""
-    echo "  Start it in another terminal:"
-    echo "    anvil --fork-url \$SEPOLIA_RPC_URL  (set SEPOLIA_RPC_URL in .env)"
+    echo "  Start it in another terminal with a Sepolia fork:"
     echo ""
-    echo "  IMPORTANT: Plain 'anvil' won't work — Orbit SDK needs"
-    echo "  the RollupCreator contract deployed on Sepolia."
+    echo "    anvil --fork-url <YOUR_SEPOLIA_RPC_URL>"
+    echo ""
+    echo "  Example using a free provider:"
+    echo "    anvil --fork-url https://rpc.sepolia.org"
+    echo "    anvil --fork-url https://sepolia.gateway.tenderly.co/<KEY>"
+    echo "    anvil --fork-url https://eth-sepolia.g.alchemy.com/v2/<KEY>"
+    echo ""
+    echo "  Or if SEPOLIA_RPC_URL is set in your .env:"
+    echo "    source .env && anvil --fork-url \$SEPOLIA_RPC_URL"
+    echo ""
+    echo "  IMPORTANT: Plain 'anvil' without --fork-url won't work."
+    echo "  The Orbit SDK needs the RollupCreator contract which is"
+    echo "  deployed on Sepolia. Forking Sepolia makes it available locally."
     wait_for_user
 
     # Re-check

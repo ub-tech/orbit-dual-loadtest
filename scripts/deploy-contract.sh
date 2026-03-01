@@ -57,6 +57,7 @@ echo ""
 # Step 2: Check WASM validity
 echo "[2/3] Checking Stylus contract (cargo stylus check)..."
 cd "$CONTRACT_DIR"
+cargo generate-lockfile 2>/dev/null || true
 cargo stylus check --endpoint "$L2_CHAIN_RPC" 2>&1
 echo "Check passed."
 echo ""
