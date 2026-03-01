@@ -37,7 +37,9 @@ cp .env.example .env
 ./scripts/kickoff.sh
 ```
 
-The kickoff script walks through all 8 steps interactively. Or run each step manually:
+The kickoff script walks through all 8 steps interactively. By default, kickoff runs the `messaging` mode — which is the storage-bound messaging application scenarios. The compute version (`compute` mode) only runs if you explicitly set `LOAD_TEST_MODE=compute` or `LOAD_TEST_MODE=all` in your `.env`. The `burst` mode is also storage/messaging but adds the Stylus-vs-EVM comparison dimension.
+
+Or run each step manually:
 
 ### Manual Steps
 
